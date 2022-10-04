@@ -25,33 +25,34 @@ disp('Extracting visual features...')
 for i = 1:length(Xtrain)
     
     % Select current image
-    I = .. ;
-    
+    I = Xtrain{i, 1};
+    % imshow(I) to show the image
     %%% Feature 1: Dominant Colours
     % Convert I to HSV image
-    HSV = .. ;
+    HSV = rgb2hsv(I);
     % Select Hue component
-    H = .. ;
+    H = HSW(:,:,1);
     % Obtain the variability in colour (entropy)
-    colour_entropy = .. ;
+    colour_entropy = entropy(H);
     % Save feature
-    features(i,1) = colour_entropy ;
+    features(i,1) = colour_entropy;
     
     %%% Feature 2: Brightness
     % Extract the Value channel from HSV image
-    V = .. ;
+    V = HSW(:,:,3);
     % Obtain the mean value of the Value channel
-    brightness = .. ;
+    brightness = mean(V);
     % Save feature
-    features(i,2) = brightness ;
+    features(i,2) = brightness;
     
     %%% Feature 3: Edges
     % Convert I to gray-scale image
-    Ig = .. ;
+    Ig = rgb2gray(I);
     % Obtain edge image using the Sobel filter
-    BW = .. ;
+    BW = edge(Ig, "Sobel");  % this returns an image with a 1 where there is an edge and a 0 otherwise
     % Get the amount of edges in the BW image
-    edge_quantity = .. ;
+    height, width = size(BW);  % size of image, for normalization
+    edge_quantity = sum(BW(:)) / (height * width);  % count the number of 1s, and normalize to size
     % Save feature
     features(i,3) = edge_quantity ;    
   
