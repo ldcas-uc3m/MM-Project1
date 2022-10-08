@@ -19,6 +19,7 @@ fprintf('\n-Drama  films: %i\n\n',sum(y==1))
 disp('Feature Extraction Stage in progress...')
 % Creating empy array of features
 features = zeros(length(Xtrain),5);
+% features = [colour_entropy, brightness, edge_quantity, num_words, mean_word_length]
 
 %% Visual Feature Extraction
 disp('Extracting visual features...')
@@ -31,7 +32,7 @@ for i = 1:length(Xtrain)
     % Convert I to HSV image
     HSV = rgb2hsv(I);
     % Select Hue component
-    H = HSW(:,:,1);
+    H = HSV(:,:,1);
     % Obtain the variability in colour (entropy)
     colour_entropy = entropy(H);
     % Save feature
@@ -39,9 +40,9 @@ for i = 1:length(Xtrain)
     
     %%% Feature 2: Brightness
     % Extract the Value channel from HSV image
-    V = HSW(:,:,3);
+    V = HSV(:,:,3);
     % Obtain the mean value of the Value channel
-    brightness = mean(V);
+    brightness = mean(V, 'all');
     % Save feature
     features(i,2) = brightness;
     
@@ -51,10 +52,12 @@ for i = 1:length(Xtrain)
     % Obtain edge image using the Sobel filter
     BW = edge(Ig, "Sobel");  % this returns an image with a 1 where there is an edge and a 0 otherwise
     % Get the amount of edges in the BW image
-    height, width = size(BW);  % size of image, for normalization
-    edge_quantity = sum(BW(:)) / (height * width);  % count the number of 1s, and normalize to size
+    im_size = size(BW);  % size of image, for normalization
+    im_height = im_size(1);
+    im_width = im_size(2);
+    edge_quantity = sum(BW(:)) / (im_height * im_width);  % count the number of 1s, and normalize to size
     % Save feature
-    features(i,3) = edge_quantity ;    
+    features(i,3) = edge_quantity;    
   
 end
 
@@ -63,21 +66,26 @@ disp('Extracting textual features...')
 for i = 1:length(Xtrain)
     
     % Select current text
-    T = .. ;
+    T = Xtrain(i, 2);
     % Tokenize document (separate into words)
     words = obtain_word_array(T);
     
     %%% Feature 4: Number of words
     % Obtain the number of words (tokens)
-    num_words = .. ;
+    num_words = length(words);
     % Save feature
-    features(i,4) = num_words ;  
+    features(i,4) = num_words;  
     
     %%% Feature 5: Length of words
     % Obtain the length of each word in the description
-    word_lengths = .. ;
+    word_lengths = zeros(num_words, 1);
+    for j = 1:num_words
+        word_lengths(j) = strlength(words(j));
+
+    end
+
     % Obtain the mean length of the words in the description
-    mean_word_length = .. ;
+    mean_word_length = mean(word_lengths);
     % Save feature
     features(i,5) = mean_word_length; 
 
@@ -87,11 +95,30 @@ disp('Feature Extraction complete!')
 %% Normalization Stage
 disp('Normalization Stage in progress...')
 % Obtain the mean of each feature
-feat_mean = .. ;
+size_features = size(features);
+num_features = size_features(2);
+
+feat_mean = zeros(num_features, 1);
+
+for i = 1:num_features
+    feat_mean(i) = mean(features(:, i));
+end
+
 % Obtain the standard deviation of each feature
-feat_std  = .. ;
+feat_std = zeros(num_features, 1);
+
+for i = 1:num_features
+    feat_std(i) = std(features(:, i));
+end
+
 % Normalize the extracted features
-features_n = .. ;
+features_n = zeros(length(features), num_features);
+
+for i = 1:length(features)
+    for j = 1:num_features
+        features_n(i, j) = (features(i, j) - feat_mean(j))/feat_std(j);
+    end
+end
 
 % Check if normalization was correctly implemented (VERY IMPORTANT)
 % If normalization was correctly implemented, running the line below should
