@@ -132,8 +132,8 @@ check_normalization(features_n);
 %   -3: Edges
 %   -4: Word number
 %   -5: Word length
-feat_a = .. ;
-feat_b = .. ;
+feat_a = 2;  % brightness
+feat_b = 4;
 % Plot feature values in scatter diagram
 figure()
 visualize_features(features_n, Ytrain, feat_a, feat_b)
