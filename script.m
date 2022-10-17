@@ -156,40 +156,107 @@ disp('Testing Stage in progress...')
 features_test = zeros(length(Xtest),5);
 
 %% Test sample processing
+
+% Redo feature extraction but for test samples
+disp('Extracting features...')
 for i = 1:length(Xtest)
- 
     
-    features_test(i,1) = .. ;
-    features_test(i,2) = .. ;
-    features_test(i,3) = .. ;
-    features_test(i,4) = .. ;  
-    features_test(i,5) = .. ; 
+    % Select current image
+    I = Xtest{i, 1};
+    % imshow(I) to show the image
+
+    %%% Feature 1: Dominant Colours
+    % Convert I to HSV image
+    HSV = rgb2hsv(I);
+    % Select Hue component
+    H = HSV(:,:,1);
+    % Obtain the variability in colour (entropy)
+    colour_entropy = entropy(H);
+    % Save feature
+    features_test(i,1) = colour_entropy;
     
+    %%% Feature 2: Brightness
+    % Extract the Value channel from HSV image
+    V = HSV(:,:,3);
+    % Obtain the mean value of the Value channel
+    brightness = mean(V, 'all');
+    % Save feature
+    features_test(i,2) = brightness;
+    
+    %%% Feature 3: Edges
+    % Convert I to gray-scale image
+    Ig = rgb2gray(I);
+    % Obtain edge image using the Sobel filter
+    BW = edge(Ig, "Sobel");  % this returns an image with a 1 where there is an edge and a 0 otherwise
+    % Get the amount of edges in the BW image
+    im_size = size(BW);  % size of image, for normalization
+    im_height = im_size(1);
+    im_width = im_size(2);
+    edge_quantity = sum(BW(:)) / (im_height * im_width);  % count the number of 1s, and normalize to size
+    % Save feature
+    features_test(i,3) = edge_quantity;    
+    
+    % Select current text
+    T = Xtest(i, 2);
+    % Tokenize document (separate into words)
+    words = obtain_word_array(T);
+    
+    %%% Feature 4: Number of words
+    % Obtain the number of words (tokens)
+    num_words = length(words);
+    % Save feature
+    features_test(i,4) = num_words;  
+    
+    %%% Feature 5: Length of words
+    % Obtain the length of each word in the description
+    word_lengths = zeros(num_words, 1);
+    for j = 1:num_words
+        word_lengths(j) = strlength(words(j));
+
+    end
+
+    % Obtain the mean length of the words in the description
+    mean_word_length = mean(word_lengths);
+    % Save feature
+    features_test(i,5) = mean_word_length; 
 end
 
 %% Test sample normalization
 %%% Perform Normalization
+disp('Normalizing...')
 % Note that you do not need to recompute the mean and standard deviation
 % again. You need to use the values from training
-features_test_n = .. ;
+features_test_n = zeros(length(features_test), num_features);
+
+for i = 1:length(features_test)
+    for j = 1:num_features
+        features_test_n(i, j) = (features_test(i, j) - feat_mean(j))/feat_std(j);
+    end
+end
+
+% check normalization
+check_normalization(features_test_n);
 
 %% Test the models against the new extracted features
-% Test visual  model
+% Test visual model
 [labels_pred_v, scores_pred_v] = predict_gaussian(visual_model, ...
                                                   features_test_n(:,[1 2 3]));
 % Test textual model
 [labels_pred_t, scores_pred_t] = predict_gaussian(textual_model, ...
                                                   features_test_n(:,[4 5]));
-% Test global  model
+% Test global model
 [labels_pred, scores_pred]     = predict_gaussian(model, ...
                                                   features_test_n);
 
 %% Performance Assessment Stage
 disp('Performance Assessment Stage in progress...')
-labels_true = Ytest';
+labels_true = Ytest;
 % Measure the performance of the developed system (Detection & False Alarm)
-P_D  = .. ;
-P_FA = .. ;
+P_D  = sum(labels_pred == 1 & labels_true == 1) / sum(labels_pred == 1);
+P_FA = sum(labels_pred == 0 & labels_true == 1) / sum(labels_pred == 0);
+
+fprintf('Probability of detection: %s\n', P_D);
+fprintf('Probability of false alarm: %s\n', P_FA);
 
 % Measure the performance of the developed system (AUC)
 % (NO NEED TO CODE ANYTHING HERE)
